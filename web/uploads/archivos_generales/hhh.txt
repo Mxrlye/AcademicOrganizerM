@@ -1,0 +1,272 @@
+	usuarioID nombreU nombres apellidos correo contraseña auth_key genero telefono
+
+
+ypoa xlgr esud azqj
+
+---------------------------------------------------------
+<?php
+use yii\helpers\Html;
+use yii\helpers\Url; 
+use yii\widgets\ActiveForm;  // Asegúrate de incluir esto
+$this->title = 'Carpetas';
+
+
+/* @var $this yii\web\View */
+/* @var $archivos array */
+/* @var $nueva_carpeta array */
+
+// ruta de la carpeta de íconos
+$iconPath = Yii::getAlias('@web') . '/Imagenes/icons/';
+?>
+
+<div class="container">
+
+    <!-- Menú desplegable -->
+    <div class="menu-desplegable">
+        <button onclick="toggleMenu()" class="btn-menu">☰</button>
+        
+        <div id="menuOpciones" class="menu-opciones">
+            <a href="#" onclick="abrirExploradorArchivos()" class="menu-item">📤 Subir archivo</a>
+            <a href="javascript:void(0);" onclick="abrirModal()" class="menu-item">🗂️ Nueva carpeta</a>
+            <a href="#" onclick="abrirExploradorCarpetas()" class="menu-item">🗃️ Subir carpeta</a>
+        </div>
+    </div>
+
+    <!-- subir archivos -->
+    <?= Html::beginForm(['site/subirarchivo'], 'post', ['enctype' => 'multipart/form-data', 'id' => 'formSubirArchivo', 'style' => 'display: none;']) ?>
+        <input type="file" name="archivo" id="archivo" onchange="document.getElementById('formSubirArchivo').submit();">
+    <?= Html::endForm() ?>
+
+    <!-- archivos -->
+    <div class="file-display">
+    <?php if (!empty($archivos)): ?>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <?php foreach ($archivos as $archivo): ?>
+                <?php
+                    $extension = pathinfo($archivo->nombreA, PATHINFO_EXTENSION);
+                    switch ($extension) {
+                        case 'pdf':
+                            $icon = $iconPath . 'pdf-icon.png';
+                            break;
+                        case 'zip':
+                            $icon = $iconPath . 'zip-icon.png';
+                            break;
+                        case 'docx':
+                            $icon = $iconPath . 'word-icon.png';
+                            break;
+                        case 'txt':
+                            $icon = $iconPath . 'txt-icon.png';
+                            break;
+                        case 'xlsx':
+                            $icon = $iconPath . 'excel-icon.png';
+                            break;
+                        case 'jpg':
+                        case 'jpeg':
+                        case 'png':
+                            $icon = $iconPath . 'image-icon.png';
+                            break;
+                        default:
+                            $icon = $iconPath . 'file-icon.png';
+                            break;
+                    }
+                ?>
+                <div class="file-item" style="text-align: center; width: 150px;">
+                    <img src="<?= $icon ?>" alt="<?= $extension ?> icon" style="width: 50px; height: 50px;">
+                    <p><?= Html::encode($archivo->nombreA) ?></p>
+                    <a href="<?= Yii::$app->request->baseUrl . $archivo->ruta ?>" target="_blank">Ver archivo</a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <p>No hay archivos disponibles.</p>
+    <?php endif; ?>
+</div>
+
+
+
+<form id="formSubirCarpeta" action="site/subircarpeta" method="post" enctype="multipart/form-data" style="display: none;">
+    <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+    <input 
+        type="file" 
+        id="inputCarpeta" 
+        name="carpeta[]" 
+        webkitdirectory 
+        multiple 
+        onchange="document.getElementById('formSubirCarpeta').submit();" 
+    />
+</form>
+
+
+<style>
+    body {
+        background: #f4f4f9;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        display: flex;
+    }
+    .menu-desplegable {
+    position: fixed;
+    top: 80px;
+    left: 40px;
+    background-color: #333;
+    border-radius: 10px;
+    z-index: 1100; /* Para asegurar que esté siempre al frente y no se encime con los archivos */
+}
+
+.file-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 25px; 
+    justify-content: center;
+    margin-top: 20px;
+    padding-left: 120px; 
+}
+
+.file-item {
+    position: relative;
+    width: 140px;
+    height: 160px;
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    cursor: pointer;
+    z-index: 900;
+}
+
+    .btn-menu {
+        background-color: #004ed6;
+        color: white;
+        padding: 10px 20px;
+        font-size: 18px;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .btn-menu:hover {
+        background-color: #5e6ec5;
+        transform: scale(1.05);
+    }
+    .menu-opciones {
+        display: none;
+        position: absolute;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        z-index: 1;
+        width: 220px;
+        padding: 10px 0;
+        margin-top: 5px;
+    }
+    .menu-item {
+        padding: 12px 16px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        color: #333;
+        font-weight: bold;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        border-radius: 5px;
+        margin: 0 10px;
+    }
+    .menu-item:hover {
+        background-color: #4878e7;
+        color: white;
+    }
+    #crearCarpetaModal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        width: 300px;
+        text-align: center;
+    }
+    .close-btn {
+        cursor: pointer;
+        font-size: 20px;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+    .file-item {
+        position: relative;
+        width: 140px;
+        height: 160px;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-align: center;
+        cursor: pointer;
+    }
+    .delete-option {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #ff4d4d;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+    }
+    .delete-option a {
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+
+<script>
+    function toggleMenu() {
+        var menu = document.getElementById("menuOpciones");
+        menu.style.display = menu.style.display === "none" ? "block" : "none";
+    }
+
+    function abrirExploradorArchivos() {
+        document.getElementById('archivo').click();
+    }
+
+    function abrirExploradorCarpetas() {
+        document.getElementById('inputCarpeta').click();
+    }
+
+    function abrirModal() {
+        document.getElementById('crearCarpetaModal').style.display = 'flex';
+    }
+
+    function cerrarModal() {
+        document.getElementById('crearCarpetaModal').style.display = 'none';
+    }
+
+
+    function toggleDeleteOption(element) {
+        document.querySelectorAll('.delete-option').forEach(function(option) {
+            option.style.display = 'none';
+        });
+        var deleteOption = element.querySelector('.delete-option');
+        deleteOption.style.display = 'block';
+    }
+
+    window.addEventListener('click', function(event) {
+        if (!event.target.closest('.file-item')) {
+            document.querySelectorAll('.delete-option').forEach(function(option) {
+                option.style.display = 'none';
+            });
+        }
+    });
+</script>
